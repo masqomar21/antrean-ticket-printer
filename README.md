@@ -37,7 +37,7 @@ npm install
 
 Edit the `.env` file to set up the server connection and event topics:
 
-```javascript
+```.env
 SOCKET_URL="http://localhost:3000"
 
 # event topics:
@@ -53,7 +53,6 @@ You can also edit the `config.js` file to set up the printer configuration:
 
 ```javascript
 const baseConfig = {
-  web_url: process.env.WEB_URL,
   socket: {
     url: process.env.SOCKET_URL || "http://localhost:3000",
     topik: {
@@ -65,7 +64,6 @@ const baseConfig = {
 };
 ```
 
-- `web_url`: The URL of the web page to generate the ticket screenshot.
 - `socket.url`: The URL of the Socket.IO server.
 - `socket.topik.printNomorAntrean`: The topic to listen for print commands.
 - `socket.topik.status`: The topic to emit status updates.
