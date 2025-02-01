@@ -23,7 +23,7 @@ IF %ERRORLEVEL% NEQ 0 (
         curl -o nodejs.msi https://nodejs.org/dist/v22.13.1/node-v22.13.1-x64.msi
     )
     
-    start /wait msiexec /i nodejs.msi /qn
+    start /wait msiexec /i nodejs.msi
     del nodejs.msi
     echo Node.js installation complete.
 
