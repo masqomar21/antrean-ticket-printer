@@ -10,19 +10,21 @@ const socket = io(baseConfig.socket.url);
 
 let cekPrinter = false;
 socket.on("connect", () => {
-  console.log("Connected to server");
+  console.log("Connected to server" + socket.id);
   socket.emit("status", { status: "connected" });
   while (!cekPrinter) {
     console.log("Checking printer...");
     cekPrinter = testPrint();
   }
   console.log("Printer ready!");
+  console.log("✅ Connected:", baseConfig.socket.topik.printNomorAntrean);
 });
 
 socket.on(baseConfig.socket.topik.printNomorAntrean, async (data) => {
   const start = new Date();
   console.log("Received print-ticket event:", data);
   const fileURLToPath = await generateScreenshot(data);
+  console.log("Screenshot generated at:", fileURLToPath);
   await printTicket(fileURLToPath);
   console.log("Printing ticket done in", new Date() - start, "ms");
 
