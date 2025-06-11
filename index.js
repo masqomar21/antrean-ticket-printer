@@ -19,6 +19,9 @@ socket.on("connect", () => {
   console.log("Printer ready!");
   console.log("✅ Connected:", baseConfig.socket.topik.printNomorAntrean);
 });
+socket.on("watch", (data) => {
+  console.log("Received watch event:", data);
+});
 
 socket.on(baseConfig.socket.topik.printNomorAntrean, async (data) => {
   const start = new Date();
