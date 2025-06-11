@@ -1,38 +1,76 @@
 import { io } from "socket.io-client";
+import { testPrint } from "./services/testPrint.js";
 import { generateScreenshot } from "./services/genFile.js";
 import { printTicket } from "./services/printEscpos.js";
-import baseConfig from "./config.js";
-import { testPrint } from "./services/testPrint.js";
 
-const socket = io(baseConfig.socket.url);
+// Buat koneksi dengan reconnect aktif
+const socket = io("https://backend-mpp.newus.id");
+// const socket = io("https://backend-mpp.newus.id", {
+//   transports: ["websocket"],
+//   reconnection: true,
+//   reconnectionAttempts: Infinity,
+//   reconnectionDelay: 2000,
+//   reconnectionDelayMax: 5000,
+//   timeout: 10000,
+// });
 
-//cek koneksi
-
+// Saat berhasil connect
 let cekPrinter = false;
 socket.on("connect", () => {
-  console.log("Connected to server" + socket.id);
+  console.log("✅ Connected:", socket.id);
+  console.log("🔗 Transport:", socket.io.engine.transport.name);
   socket.emit("status", { status: "connected" });
   while (!cekPrinter) {
     console.log("Checking printer...");
     cekPrinter = testPrint();
   }
-  console.log("Printer ready!");
-  console.log("✅ Connected:", baseConfig.socket.topik.printNomorAntrean);
-});
-socket.on("watch", (data) => {
-  console.log("Received watch event:", data);
+
+  // Cek printer atau proses lain di sini kalau perlu
+  console.log("🖨️ Printer ready!");
 });
 
-socket.on(baseConfig.socket.topik.printNomorAntrean, async (data) => {
+// Event antrean_print diterima
+socket.on("antrean_print", async (msg, ack) => {
   const start = new Date();
-  console.log("Received print-ticket event:", data);
+  console.log("📩 antrean_print diterima:", msg);
+
   const fileURLToPath = await generateScreenshot(data);
   console.log("Screenshot generated at:", fileURLToPath);
   await printTicket(fileURLToPath);
-  console.log("Printing ticket done in", new Date() - start, "ms");
 
-  // setTimeout(() => {
-  //   console.log("Printing ticket...");
-  //   socket.emit("status", { status: "printed" });
-  // }, 5000);
+  // Proses print, screenshot, dsb (asynchronous boleh pakai await di sini)
+
+  console.log("✅ Print selesai dalam", new Date() - start, "ms");
+  console.log("📤 Mengirim ACK ke server...", ack);
+  if (ack) ack("ok"); // Kirim ACK ke server (jika server pakai)
 });
+
+// Saat disconnect
+socket.on("disconnect", (reason) => {
+  console.log("❌ Disconnected. Reason:", reason);
+});
+
+// Saat mencoba reconnect
+socket.io.on("reconnect_attempt", (attempt) => {
+  console.log("🔄 Reconnect attempt:", attempt);
+});
+
+// Saat reconnect berhasil
+socket.io.on("reconnect", (attempt) => {
+  console.log("✅ Reconnected! Attempt:", attempt);
+});
+
+// Saat reconnect gagal
+socket.io.on("reconnect_failed", () => {
+  console.log("❌ Gagal reconnect");
+});
+
+// Cek koneksi setiap 10 detik
+setInterval(() => {
+  if (socket.connected) {
+    console.log("🟢 Socket masih nyambung:", socket.id);
+  } else {
+    console.log("🔴 Socket tidak terhubung. Mencoba reconnect...");
+    socket.connect(); // Paksa connect ulang
+  }
+}, 10000);
