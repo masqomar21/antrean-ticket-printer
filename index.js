@@ -5,14 +5,6 @@ import { printTicket } from "./services/printEscpos.js";
 
 // Buat koneksi dengan reconnect aktif
 const socket = io("https://backend-mpp.newus.id");
-// const socket = io("https://backend-mpp.newus.id", {
-//   transports: ["websocket"],
-//   reconnection: true,
-//   reconnectionAttempts: Infinity,
-//   reconnectionDelay: 2000,
-//   reconnectionDelayMax: 5000,
-//   timeout: 10000,
-// });
 
 // Saat berhasil connect
 let cekPrinter = false;
@@ -43,6 +35,10 @@ socket.on("antrean_print", async (msg, ack) => {
   console.log("✅ Print selesai dalam", new Date() - start, "ms");
   console.log("📤 Mengirim ACK ke server...", ack);
   if (ack) ack("ok"); // Kirim ACK ke server (jika server pakai)
+});
+
+socket.io.engine.on("upgrade", (transport) => {
+  console.log("🔄 Transport upgraded to:", transport.name);
 });
 
 // Saat disconnect
